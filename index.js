@@ -1,5 +1,5 @@
-
-const puppeteer = require('puppeteer');
+const puppeteer = require("puppeteer");
+const fetch = require("node-fetch");
 
 (async () => {
   const browser = await puppeteer.launch();
@@ -7,23 +7,47 @@ const puppeteer = require('puppeteer');
 
   // Activer l'enregistrement des requêtes
   await page.setRequestInterception(true);
-  var data =[]
+  tokens = [];
   // Intercepter les requêtes’
-  page.on('request', (request) => {
-    if (request.url() === 'https://rpcache-aa.meteofrance.com/internet2018client/2.0/forecast/marine?lat=16.15&lon=-61.5&id=') {
+  page.on("request", (request) => {
+    if (
+      request.url() ===
+      "https://rpcache-aa.meteofrance.com/internet2018client/2.0/forecast/marine?lat=16.15&lon=-61.5&id="
+    ) {
       // Récupérer les headers de la requête
       const headers = request.headers();
-      data.push(headers)
-      console.log(data)
+
+      if (headers.authorization != undefined) {
+        tokens.push(headers.authorization);
+        //console.log(tokens);
+        if (tokens[0] == tokens[1]) {
+          tokens.pop();
+          console.log(tokens[0]);
+          token = tokens[0].replace(/Bearer /, "");
+          return tokens;
+        }
+      }
     }
     request.continue();
   });
   // Naviguer vers une URL
-  await page.goto('https://meteofrance.gp/fr/marine/guadeloupe/petit-cul-de-sac-marin');
+  await page.goto(
+    "https://meteofrance.gp/fr/marine/guadeloupe/petit-cul-de-sac-marin"
+  );
+  console.log(token);
 
+  const response = await fetch(
+    "https://rpcache-aa.meteofrance.com/internet2018client/2.0/forecast/marine?lat=16.15&lon=-61.5&token=" +
+      token
+  );
+  const data = await response.json();
+
+  //console.log(data);
+  Object.entries(data).forEach(function ([key, value]) {
+    console.log(key, ":", value);
+  });
   await browser.close();
 })();
-
 
 /*
 const puppeteer = require('puppeteer');
@@ -33,7 +57,7 @@ const puppeteer = require('puppeteer');
 	const page = await browser.newPage();
   await page.setViewport({width: 1080, height: 1024});
 	await page.goto('https://meteofrance.gp/fr/marine/guadeloupe/petit-cul-de-sac-marin');
-  const data = [];
+  const tokens = [];
   const result = await page.evaluate(() => {
     let day = document.querySelector('#previsions-marine > div > div.prev-right > div:nth-child(1)').innerText
     day = day.split('\n')
@@ -59,6 +83,3 @@ const puppeteer = require('puppeteer');
 })();
 
 */
-
-
-
