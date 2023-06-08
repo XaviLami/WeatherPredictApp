@@ -8,6 +8,7 @@ const fetch = require("node-fetch");
   // Activer l'enregistrement des requêtes
   await page.setRequestInterception(true);
   tokens = [];
+  predicts = [];
   // Intercepter les requêtes’
   page.on("request", (request) => {
     if (
@@ -37,14 +38,15 @@ const fetch = require("node-fetch");
   console.log(token);
 
   const response = await fetch(
-    "https://rpcache-aa.meteofrance.com/internet2018client/2.0/forecast/marine?lat=16.15&lon=-61.5&token=" +
-      token
+    `https://rpcache-aa.meteofrance.com/internet2018client/2.0/forecast/marine?lat=16.15&lon=-61.5&token=${token}`
   );
   const data = await response.json();
+  predicts = [data][0].properties;
+  console.log(predicts.marine);
+  //console.log([data][0].properties.marine);
 
-  //console.log(data);
   Object.entries(data).forEach(function ([key, value]) {
-    console.log(key, ":", value);
+    //console.log(key, ":", value);
   });
   await browser.close();
 })();
