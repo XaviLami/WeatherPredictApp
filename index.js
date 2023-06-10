@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const fetch = require("node-fetch");
+var moment = require('moment'); // require
 
 (async () => {
   const browser = await puppeteer.launch();
@@ -42,12 +43,32 @@ const fetch = require("node-fetch");
   );
   const data = await response.json();
   predicts = [data][0].properties;
-  console.log(predicts.marine);
+  //console.log(predicts);
   //console.log([data][0].properties.marine);
+  
 
-  Object.entries(data).forEach(function ([key, value]) {
-    //console.log(key, ":", value);
-  });
+  /*Tableau de retour :
+   [{
+    name : Capesterre-Belle Eau
+    time : 10H00
+    wave_height : 1.6m
+    sea_condition_description: mer agitée
+  }]
+  */
+  for (var i = 0; i < 4; i++) {
+    responsePredict =[{
+      name:predicts.name,
+      time: (moment(predicts.marine[i].time).locale('fr')).format('LLLL'),
+      wave_height :predicts.marine[i].wave_height,
+      sea_condition_description: predicts.marine[i].sea_condition_description
+    }]
+    console.log(responsePredict)
+  }
+  
+  
+  /*responsePredict = [{
+    name:predicts.name
+  }]*/
   await browser.close();
 })();
 
