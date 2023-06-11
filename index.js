@@ -1,6 +1,8 @@
 const puppeteer = require("puppeteer");
 const fetch = require("node-fetch");
-var moment = require('moment'); // require
+var moment = require("moment"); // require
+const TelegramBot = require("node-telegram-bot-api");
+const tokenTelegrame = "6184865325:AAGiVCR9k62rxsNu0WjWRL9MKkvgE7gakO4";
 
 (async () => {
   const browser = await puppeteer.launch();
@@ -10,6 +12,7 @@ var moment = require('moment'); // require
   await page.setRequestInterception(true);
   tokens = [];
   predicts = [];
+  responsePredict = [];
   // Intercepter les requêtes’
   page.on("request", (request) => {
     if (
@@ -45,7 +48,6 @@ var moment = require('moment'); // require
   predicts = [data][0].properties;
   //console.log(predicts);
   //console.log([data][0].properties.marine);
-  
 
   /*Tableau de retour :
    [{
@@ -56,16 +58,42 @@ var moment = require('moment'); // require
   }]
   */
   for (var i = 0; i < 4; i++) {
-    responsePredict =[{
-      name:predicts.name,
-      time: (moment(predicts.marine[i].time).locale('fr')).format('LLLL'),
-      wave_height :predicts.marine[i].wave_height,
-      sea_condition_description: predicts.marine[i].sea_condition_description
-    }]
-    console.log(responsePredict)
+    responsePredict.push({
+      name: predicts.name,
+      time: moment(predicts.marine[i].time).locale("fr").format("LLLL"),
+      wave_height: predicts.marine[i].wave_height,
+      sea_condition_description: predicts.marine[i].sea_condition_description,
+    });
+
+    //console.log(responsePredict);
   }
-  
-  
+  console.log(responsePredict);
+  const bot = new TelegramBot(tokenTelegrame, { polling: true });
+  bot.onText(/\/meteo/, (msg) => {
+    for (var e = 0; e < 4; e++) {
+      bot.sendMessage(
+        msg.chat.id,
+        `<pre> ${
+          " Lieu: " +
+          responsePredict[e].name +
+          "                          " +
+          " Date et heure: " +
+          responsePredict[e].time +
+          "                          " +
+          " Hauteur des vagues:" +
+          responsePredict[e].wave_height +
+          "m" +
+          "                                             " +
+          " Etat de la mer: " +
+          responsePredict[e].sea_condition_description
+        }</pre>`,
+        {
+          parse_mode: "HTML",
+        }
+      );
+    }
+  });
+
   /*responsePredict = [{
     name:predicts.name
   }]*/
